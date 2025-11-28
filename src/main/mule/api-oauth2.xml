@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:oauth="http://www.mulesoft.org/schema/mule/oauth" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/oauth http://www.mulesoft.org/schema/mule/oauth/current/mule-oauth.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration"
+		doc:name="HTTP Request configuration" doc:id="986d9aad-9c6c-427a-98cf-31e536faf897">
+		<http:request-connection protocol="HTTPS"
+			host="api.github.com" port="443">
+			<http:authentication>
+
+				<oauth:authorization-code-grant-type
+					clientId="add client id" 
+					clientSecret="add client secret"
+					localCallbackUrl="http://localhost:8082/callback"
+					authorizationUrl="https://github.com/login/oauth/authorize"
+					localAuthorizationUrl="http://localhost:8082/login" 
+					tokenUrl="https://github.com/login/oauth/access_token"
+					responseAccessToken="#[payload.'access_token']"
+					responseRefreshToken="#[payload.'access_token']"
+					externalCallbackUrl="http://localhost:8082/callback" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config"
+		doc:name="HTTP Listener config" doc:id="b9a3c88e-90d1-488b-9f6c-8dc58178ccce">
+		<http:listener-connection host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<flow name="api-oauth2Flow" doc:id="c9a0b020-39a8-44ac-a77e-38fdb90480e4">
+		<http:listener doc:name="Listener"
+			doc:id="65a98e50-1aa1-4ab9-a374-20f181c2c799" config-ref="HTTP_Listener_config"
+			path="/oauth2" />
+		<http:request method="GET" doc:name="Request"
+			doc:id="de0937d2-d2c8-4460-acb0-023fbdb3acd3" config-ref="HTTP_Request_configuration"
+			path="/user" />
+		<ee:transform doc:name="Transform Message"
+			doc:id="f70e86ca-2394-4b06-b96b-aa931828fec4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
